@@ -13,37 +13,37 @@
     </span>
 
     <input
+      v-model="term"
       class="w-full border rounded-md pl-10 pr-4 py-2 focus:border-blue-500 focus:outline-none focus:shadow-outline"
       type="search"
       placeholder="Search"
-			v-model="term"
     />
   </form>
 </template>
 
 <script>
 export default {
-	name: 'Search',
+  name: 'Search',
 
-	data() {
-		return {
-			term: ''
-		}
-	},
+  data() {
+    return {
+      term: '',
+    };
+  },
 
-	watch: {
-		term() {
-			if (!this.term) {
-				this.doSearch()
-			}
-		}
-	},
+  watch: {
+    term() {
+      if (!this.term) {
+        this.doSearch();
+      }
+    },
+  },
 
-	methods: {
-		doSearch() {
-			this.$emit('doSearch', this.term)
-		}
-	}
+  methods: {
+    doSearch() {
+      this.$emit('doSearch', this.term);
+    },
+  },
 };
 </script>
 

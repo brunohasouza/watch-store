@@ -1,126 +1,130 @@
-import Vue from 'vue'
-import axios from 'axios'
-import { mount } from '@vue/test-utils'
+import Vue from 'vue';
+import axios from 'axios';
+import { mount } from '@vue/test-utils';
 
-import ProductList from '.'
-import ProductCard from '@/components/ProductCard'
-import Search from '@/components/Search'
-import { makeServer } from '@/miragejs/server'
+import ProductCard from '@/components/ProductCard';
+import Search from '@/components/Search';
+import { makeServer } from '@/miragejs/server';
+import ProductList from '.';
 
-jest.mock('axios', () => ({ 
-    get: jest.fn()
-}))
+jest.mock('axios', () => ({
+  get: jest.fn(),
+}));
 
 describe('ProductList - integration', () => {
-    let server
+  let server;
 
-    beforeEach(() => {
-        server = makeServer({ environment: 'test' })
-    })
+  beforeEach(() => {
+    server = makeServer({ environment: 'test' });
+  });
 
-    afterEach(() => {
-        server.shutdown()
-        jest.clearAllMocks()
-    })
+  afterEach(() => {
+    server.shutdown();
+    jest.clearAllMocks();
+  });
 
-    const getProducts = async (quantity = 10, overrides = []) => {
-        const products = [
-            ...server.createList('product', quantity),
-            ...overrides.map(override => server.create('product', override))
-        ]
+  const getProducts = (quantity = 10, overrides = []) => {
+    const products = [
+      ...server.createList('product', quantity),
+      ...overrides.map((override) => server.create('product', override)),
+    ];
 
-        return products
+    return products;
+  };
+
+  const mountProductList = async (
+    quantity = 10,
+    overrides = [],
+    shouldReject = false
+  ) => {
+    const products = await getProducts(quantity, overrides);
+
+    if (shouldReject) {
+      axios.get.mockReturnValue(Promise.reject(new Error('')));
+    } else {
+      axios.get.mockReturnValue(Promise.resolve({ data: { products } }));
     }
 
-    const mountProductList = async (quantity = 10, overrides = [], shouldReject = false) => {
-        const products = await getProducts(quantity, overrides)
-
-        if (shouldReject) {
-            axios.get.mockReturnValue(Promise.reject(new Error('')))
-        } else {
-            axios.get.mockReturnValue(Promise.resolve({ data: { products } }))
-        }
-
-        const wrapper = mount(ProductList, {
-            mocks: {
-                $axios: axios
-            }
-        })
-
-        await Vue.nextTick()
-
-        return { wrapper, products }
-    }
-
-    it('should mount the component', async () => {
-        const { wrapper } = await mountProductList()
-        expect(wrapper.vm).toBeDefined()
+    const wrapper = mount(ProductList, {
+      mocks: {
+        $axios: axios,
+      },
     });
 
-    it('should mount the Search component as a child', async () => {
-        const { wrapper } = await mountProductList()
-        expect(wrapper.findComponent(Search)).toBeDefined()
-    });
+    await Vue.nextTick();
 
-    it('should call axios.get on component mount', async () => {
-        await mountProductList()
+    return { wrapper, products };
+  };
 
-        expect(axios.get).toHaveBeenCalledTimes(1)
-        expect(axios.get).toHaveBeenCalledWith('/api/products')
-    });
+  it('should mount the component', async () => {
+    const { wrapper } = await mountProductList();
+    expect(wrapper.vm).toBeDefined();
+  });
 
-    it('should mount the ProductCard component 10 times', async () => {
-        const { wrapper } = await mountProductList()
-        const cards = wrapper.findAllComponents(ProductCard)
-        expect(cards).toHaveLength(10)
-    });
+  it('should mount the Search component as a child', async () => {
+    const { wrapper } = await mountProductList();
+    expect(wrapper.findComponent(Search)).toBeDefined();
+  });
 
-    it('should display the error message when Promise rejects', async () => {
-        const { wrapper } = await mountProductList(10, [], true)
-        expect(wrapper.text()).toContain('Problemas ao carregar a lista!')
-    });
+  it('should call axios.get on component mount', async () => {
+    await mountProductList();
 
-    // AAA -> Arrange - Act - Assert
-    it('should filter the product list when a search is performed', async () => {
-        // Arrange
-        const { wrapper } = await mountProductList(10, [
-            { title: 'Meu relógio amado' },
-            { title: 'Meu outro relógio estimado' }
-        ])
+    expect(axios.get).toHaveBeenCalledTimes(1);
+    expect(axios.get).toHaveBeenCalledWith('/api/products');
+  });
 
-        // Act
-        const search = wrapper.findComponent(Search)
+  it('should mount the ProductCard component 10 times', async () => {
+    const { wrapper } = await mountProductList();
+    const cards = wrapper.findAllComponents(ProductCard);
+    expect(cards).toHaveLength(10);
+  });
 
-        search.find('input[type="search"]').setValue('relógio')
-        await search.find('form').trigger('submit')
+  it('should display the error message when Promise rejects', async () => {
+    const { wrapper } = await mountProductList(10, [], true);
+    expect(wrapper.text()).toContain('Problemas ao carregar a lista!');
+  });
 
-        // Assert
-        const cards = wrapper.findAllComponents(ProductCard)
+  // AAA -> Arrange - Act - Assert
+  it('should filter the product list when a search is performed', async () => {
+    // Arrange
+    const { wrapper } = await mountProductList(10, [
+      { title: 'Meu relógio amado' },
+      { title: 'Meu outro relógio estimado' },
+    ]);
 
-        expect(wrapper.vm.searchTerm).toEqual('relógio')
-        expect(cards).toHaveLength(2)
-    });
+    // Act
+    const search = wrapper.findComponent(Search);
 
-    // AAA -> Arrange - Act - Assert
-    it('should filter the product list when a search is performed with empty term', async () => {
-        // Arrange
-        const { wrapper } = await mountProductList(10, [
-            { title: 'Meu relógio amado' }
-        ])
+    search.find('input[type="search"]').setValue('relógio');
+    await search.find('form').trigger('submit');
 
-        // Act
-        const search = wrapper.findComponent(Search)
+    // Assert
+    const cards = wrapper.findAllComponents(ProductCard);
 
-        search.find('input[type="search"]').setValue('relógio')
-        await search.find('form').trigger('submit')
+    expect(wrapper.vm.searchTerm).toEqual('relógio');
+    expect(cards).toHaveLength(2);
+  });
 
-        search.find('input[type="search"]').setValue('')
-        await search.find('form').trigger('submit')
+  // AAA -> Arrange - Act - Assert
+  it('should filter the product list when a search is performed with empty term', async () => {
+    // Arrange
+    const { wrapper } = await mountProductList(10, [
+      { title: 'Meu relógio amado' },
+    ]);
 
-        // Assert
-        const cards = wrapper.findAllComponents(ProductCard)
-        
-        expect(wrapper.vm.searchTerm).toEqual('')
-        expect(cards).toHaveLength(11)
-    });
-})
+    // Act
+    const search = wrapper.findComponent(Search);
+
+    search.find('input[type="search"]').setValue('relógio');
+    await search.find('form').trigger('submit');
+
+    search.find('input[type="search"]').setValue('');
+    await search.find('form').trigger('submit');
+
+    // Assert
+    const cards = wrapper.findAllComponents(ProductCard);
+
+    expect(wrapper.vm.searchTerm).toEqual('');
+    expect(cards).toHaveLength(11);
+  });
+});

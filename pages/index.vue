@@ -28,17 +28,19 @@ export default {
     return {
       products: [],
       errorMessage: '',
-      searchTerm: ''
+      searchTerm: '',
     };
   },
   computed: {
     list() {
       if (this.searchTerm.trim() !== '') {
-        return this.products.filter(({ title }) => title.includes(this.searchTerm))
+        return this.products.filter(({ title }) =>
+          title.includes(this.searchTerm)
+        );
       }
-      
-      return this.products
-    }
+
+      return this.products;
+    },
   },
   async created() {
     try {
@@ -49,8 +51,8 @@ export default {
   },
   methods: {
     setSearchTerm(term) {
-      this.searchTerm = term
-    }
-  }
+      this.searchTerm = term;
+    },
+  },
 };
 </script>
