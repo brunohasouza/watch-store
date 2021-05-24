@@ -5,7 +5,11 @@
   >
     <div class="flex items-center justify-between">
       <h3 class="text-2xl font-medium text-gray-700">Your cart</h3>
-      <button data-testid="close-button" class="text-gray-600 focus:outline-none" @click="close">
+      <button
+        data-testid="close-button"
+        class="text-gray-600 focus:outline-none"
+        @click="close"
+      >
         <svg
           class="h-5 w-5"
           fill="none"
@@ -20,7 +24,11 @@
       </button>
     </div>
     <hr class="my-3" />
-    <cart-item :product="product" v-for="product in products" :key="product.id" />
+    <cart-item
+      v-for="product in products"
+      :key="product.id"
+      :product="product"
+    />
     <h3 v-if="!hasProducts">Cart is empty</h3>
     <a
       class="flex items-center justify-center mt-4 px-3 py-2 bg-blue-600 text-white text-sm uppercase font-medium rounded hover:bg-blue-500 focus:outline-none focus:bg-blue-500"
@@ -52,13 +60,13 @@ export default {
     },
     products: {
       type: Array,
-      default: () => []
-    }
+      default: () => [],
+    },
   },
   computed: {
     hasProducts() {
-      return this.products.length > 0
-    }
+      return this.products.length > 0;
+    },
   },
   methods: {
     close() {
