@@ -100,4 +100,18 @@ describe('Cart - unit', () => {
 
     expect(spy).toHaveBeenCalledTimes(1);
   });
+
+  it('should not display empty cart button when there are no products', () => {
+    const { cartManager } = mountCart();
+
+    const wrapper = mount(Cart, {
+      mocks: {
+        $cart: cartManager,
+      },
+    });
+
+    const button = wrapper.find('[data-testid="clear-cart-button"]');
+
+    expect(button.isVisible()).toBe(false);
+  });
 });
